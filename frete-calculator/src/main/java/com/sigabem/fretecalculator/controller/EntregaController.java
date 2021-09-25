@@ -12,6 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.text.NumberFormat;
+import java.util.Locale;
+
 @RequiredArgsConstructor
 @RestController
 @RequestMapping("sigabem")
@@ -21,7 +24,7 @@ public class EntregaController {
 
     @PostMapping("/calcula-frete")
     public ResponseEntity<?> postEntrega(@RequestBody EntregaRequest entregaRequest) {
-        Entrega entrega = service.realizarEntrega(entregaRequest);
+        Entrega entrega = service.doEntrega(entregaRequest);
         EntregaResponse entregaResponse = toEntregaResponse(entrega);
         System.out.println(entregaResponse.toString());
         return new ResponseEntity<>(entregaResponse, HttpStatus.CREATED);

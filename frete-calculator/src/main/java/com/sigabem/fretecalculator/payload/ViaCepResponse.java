@@ -6,13 +6,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class ViaCepResponse {
 
     private String cep;
     private String ddd;
     private String localidade;
-    private String bairro;
+    private String uf;
 }

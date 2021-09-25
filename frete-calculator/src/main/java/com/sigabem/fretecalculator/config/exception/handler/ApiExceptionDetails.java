@@ -10,6 +10,7 @@ import java.util.List;
 public class ApiExceptionDetails<T> {
 
     private Long timestamp;
-    private String msg;
+    private Integer status;
+    private String message;
     private List<T> details;
 }

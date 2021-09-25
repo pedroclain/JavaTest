@@ -1,11 +1,13 @@
 package com.sigabem.fretecalculator.config.exception.handler;
 
 import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
+@Getter
+@Setter
 @AllArgsConstructor
-@Data
-public class InvalidCpfException extends RuntimeException {
+public class InvalidParameterException extends RuntimeException{
 
     private String msg;
 }

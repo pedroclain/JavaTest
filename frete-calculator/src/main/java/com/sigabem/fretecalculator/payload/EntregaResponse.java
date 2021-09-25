@@ -1,13 +1,12 @@
 package com.sigabem.fretecalculator.payload;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.ToString;
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.*;
 
 import java.time.LocalDate;
 
 @Builder
+@NoArgsConstructor
 @AllArgsConstructor
 @ToString
 @Data
