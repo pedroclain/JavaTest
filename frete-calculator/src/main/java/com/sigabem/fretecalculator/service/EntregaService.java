@@ -1,5 +1,6 @@
 package com.sigabem.fretecalculator.service;
 
+import com.sigabem.fretecalculator.config.exception.handler.InvalidCpfException;
 import com.sigabem.fretecalculator.model.Entrega;
 import com.sigabem.fretecalculator.payload.EntregaRequest;
 import com.sigabem.fretecalculator.payload.ViaCepResponse;
@@ -23,11 +24,14 @@ public class EntregaService {
     private final String RETURN_FORMAT = "/json/";
 
     public Entrega realizarEntrega(EntregaRequest entregaRequest) {
+        log.info("Validando CEP de origem. . .");
+        validateCep(entregaRequest.getCepOrigem());
+        log.info("Validando CEP de destino. . .");
+        validateCep(entregaRequest.getCepDestino());
         String urlCepOrigem = URI + entregaRequest.getCepOrigem() + RETURN_FORMAT;
         String urlCepDestino = URI + entregaRequest.getCepDestino() + RETURN_FORMAT;
         log.info("Procurando CEPs com api ViaCep. . .");
         ResponseEntity<ViaCepResponse> responseEntityOrigin = restTemplate.getForEntity(urlCepOrigem, ViaCepResponse.class);
-        log.info(""+responseEntityOrigin.getStatusCode());
         ViaCepResponse viaCepResponseOrigem = responseEntityOrigin.getBody();
         log.info("CEP de origem encontrado");
         ResponseEntity<ViaCepResponse> responseEntityDestino = restTemplate.getForEntity(urlCepDestino, ViaCepResponse.class);
@@ -41,12 +45,13 @@ public class EntregaService {
 
     private Double aplicarDesconto(Double peso, ViaCepResponse viaCepResponseOrigem ,ViaCepResponse viaCepResponseDestino) {
         log.info("Aplicando desconto ao frete. . .");
+
         // valor do frete é igual ao valor do peso inicialmente.
 
-        if (viaCepResponseOrigem.getLocalidade().equals(viaCepResponseDestino.getLocalidade())) {
-            return peso * 0.75;
-        } else if (viaCepResponseOrigem.getDdd().equals(viaCepResponseDestino.getDdd())) {
+        if (viaCepResponseOrigem.getDdd().equals(viaCepResponseDestino.getDdd())) {
             return peso * 0.5;
+        } else if (viaCepResponseOrigem.getLocalidade().equals(viaCepResponseDestino.getLocalidade())) {
+            return peso * 0.75;
         } else {
             return peso;
         }
@@ -55,10 +60,11 @@ public class EntregaService {
     private LocalDate calcularDataPrevista(ViaCepResponse viaCepResponseOrigem,ViaCepResponse viaCepResponseDestino) {
         log.info("calculando data de entrega prevista. . .");
         LocalDate dataPrevista = LocalDate.now();
-        if (viaCepResponseOrigem.getLocalidade().equals(viaCepResponseDestino.getLocalidade())) {
-            return dataPrevista.plusDays(3);
-        } else if (viaCepResponseOrigem.getDdd().equals(viaCepResponseDestino.getDdd())) {
+
+        if (viaCepResponseOrigem.getDdd().equals(viaCepResponseDestino.getDdd())) {
             return dataPrevista.plusDays(1);
+        } else if (viaCepResponseOrigem.getLocalidade().equals(viaCepResponseDestino.getLocalidade())) {
+            return dataPrevista.plusDays(3);
         } else {
             return dataPrevista.plusDays(10);
         }
@@ -72,6 +78,19 @@ public class EntregaService {
         entrega.setDataPrevistaEntrega(dataPrevista);
         entrega.setDataConsulta(LocalDate.now());
         return entrega;
+    }
+
+    private void validateCep(String cep) {
+        cep = cep.replace("-", "").trim();
+        if (cep.length() != 8) {
+            throw new InvalidCpfException(String.format("CEP %s invalido. O CEP deve ter 8 dígitos", cep));
+        }
+
+        try {
+            Integer.parseInt(cep);
+        } catch (NumberFormatException ex) {
+            throw new InvalidCpfException(String.format("CEP %s inválido. O CPF deve ser numérico", cep));
+        }
     }
 
 }
