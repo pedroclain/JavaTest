@@ -11,7 +11,7 @@ public class EntregaRequestUtilTest {
                 .cepOrigem(entrega.getCepOrigem())
                 .cepDestino(entrega.getCepDestino())
                 .nomeDestinatario(entrega.getNomeDestinatario())
-                .peso(entrega.getPeso())
+                .peso(String.valueOf(entrega.getPeso()))
                 .build();
     }
 
@@ -24,7 +24,7 @@ public class EntregaRequestUtilTest {
 
     public static EntregaRequest create75Percent() {
         EntregaRequest entregaRequest = create50Percent();
-        entregaRequest.setCepOrigem("2390010");
+        entregaRequest.setCepOrigem("23900010");
         entregaRequest.setCepDestino("22795810");
         return entregaRequest;
     }

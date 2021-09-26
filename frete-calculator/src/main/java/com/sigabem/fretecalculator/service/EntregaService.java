@@ -1,10 +1,11 @@
 package com.sigabem.fretecalculator.service;
 
-import com.sigabem.fretecalculator.config.exception.handler.InvalidParameterException;
+import com.sigabem.fretecalculator.config.exception.InvalidParameterException;
 import com.sigabem.fretecalculator.model.Entrega;
 import com.sigabem.fretecalculator.payload.EntregaRequest;
 import com.sigabem.fretecalculator.payload.ViaCepResponse;
 import com.sigabem.fretecalculator.repository.EntregaRepository;
+import com.sigabem.fretecalculator.util.EntregaRequestUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -23,29 +24,26 @@ public class EntregaService {
     private final String RETURN_FORMAT = "/json/";
 
     public Entrega doEntrega(EntregaRequest entregaRequest) {
-        log.info("Validando CEP de origem. . .");
-        validateCep(entregaRequest.getCepOrigem());
-        log.info("Validando CEP de destino. . .");
-        validateCep(entregaRequest.getCepDestino());
-        validatePeso(entregaRequest.getPeso());
-        String urlCepOrigem = URI + entregaRequest.getCepOrigem() + RETURN_FORMAT;
-        String urlCepDestino = URI + entregaRequest.getCepDestino() + RETURN_FORMAT;
 
-        log.info("Procurando CEPs com api ViaCep. . .");
-        ResponseEntity<ViaCepResponse> responseEntityOrigin = restTemplate.getForEntity(urlCepOrigem, ViaCepResponse.class);
-        ViaCepResponse viaCepResponseOrigem = responseEntityOrigin.getBody();
-        if (viaCepResponseOrigem == null) throw new InvalidParameterException(String.format("cepOrigem = %s not found", entregaRequest.getCepOrigem()));
-        log.info("CEP de origem encontrado");
+        EntregaRequestUtil.validateFields(entregaRequest);
+        String cepOrigem = entregaRequest.getCepOrigem();
+        String cepDestino = entregaRequest.getCepDestino();
+        String urlCepOrigem = URI + cepOrigem + RETURN_FORMAT;
+        String urlCepDestino = URI + cepDestino + RETURN_FORMAT;
 
-        ResponseEntity<ViaCepResponse> responseEntityDestino = restTemplate.getForEntity(urlCepDestino, ViaCepResponse.class);
-        log.info(""+responseEntityDestino.getStatusCode());
-        ViaCepResponse viaCepResponseDestino = responseEntityDestino.getBody();
-        if (viaCepResponseDestino == null) throw new InvalidParameterException(String.format("cepDestino = %s not found", entregaRequest.getCepDestino()));
-        log.info("CEP de destino encontrado");
-        System.out.println(viaCepResponseOrigem);
-        System.out.println(viaCepResponseDestino);
+        log.info("Searching CEPs with ViaCep API. . .");
+        ViaCepResponse viaCepResponseOrigem = restTemplate.getForEntity(urlCepOrigem, ViaCepResponse.class).getBody();
+
+        if (viaCepResponseOrigem.getDdd() == null) throw new InvalidParameterException("CEP not found", "cepOrigem", cepOrigem);
+        log.info(String.format("CEP '%s' found with values = %s", cepOrigem, viaCepResponseOrigem));
+
+        ViaCepResponse viaCepResponseDestino = restTemplate.getForEntity(urlCepDestino, ViaCepResponse.class).getBody();
+        if (viaCepResponseDestino.getDdd() == null) throw new InvalidParameterException("CEP not found", "cepDestino", cepDestino);
+        log.info(String.format("CEP '%s' found with values = %s", cepDestino, viaCepResponseDestino));
+
         Entrega entrega = criarEntrega(entregaRequest, viaCepResponseOrigem, viaCepResponseDestino);
-        log.info("Entrega criada com sucesso");
+        log.info("New Entrega object created and persisted on database");
+
         repository.save(entrega);
         return entrega;
     }
@@ -53,7 +51,7 @@ public class EntregaService {
     private Double aplicarDesconto(Double peso, ViaCepResponse viaCepResponseOrigem ,ViaCepResponse viaCepResponseDestino) {
         log.info("Aplicando desconto ao frete. . .");
 
-        // valor do frete é igual ao valor do peso inicialmente.
+        // frete value equals peso value initially
 
         if (viaCepResponseOrigem.getDdd().equals(viaCepResponseDestino.getDdd())) {
             return peso * 0.5;
@@ -78,12 +76,13 @@ public class EntregaService {
     }
 
     private Entrega criarEntrega(EntregaRequest entregaRequest, ViaCepResponse viaCepResponseOrigem, ViaCepResponse viaCepResponseDestino) {
-        Double frete = aplicarDesconto(entregaRequest.getPeso(), viaCepResponseOrigem, viaCepResponseDestino);
+        double peso = Double.parseDouble(entregaRequest.getPeso());
+        Double frete = aplicarDesconto(peso, viaCepResponseOrigem, viaCepResponseDestino);
         LocalDate dataPrevista = calcularDataPrevista(viaCepResponseOrigem, viaCepResponseDestino);
         return Entrega.builder()
                 .cepOrigem(entregaRequest.getCepOrigem())
                 .cepDestino(entregaRequest.getCepDestino())
-                .peso(entregaRequest.getPeso())
+                .peso(peso)
                 .nomeDestinatario(entregaRequest.getNomeDestinatario())
                 .vlTotalFrete(frete)
                 .dataPrevistaEntrega(dataPrevista)
@@ -91,27 +90,6 @@ public class EntregaService {
                 .build();
     }
 
-    private void validateCep(String cep) {
-        if (cep == null) {
-            throw new InvalidParameterException(String.format("CEP %s is invalid: CEP must have 8 digits", cep));
-        }
 
-        cep = cep.replace("-", "").trim();
-        if (cep.length() != 8) {
-            throw new InvalidParameterException(String.format("CEP %s is invalid: CEP must have 8 digits", cep));
-        }
-
-        try {
-            Integer.parseInt(cep);
-        } catch (NumberFormatException ex) {
-            throw new InvalidParameterException(String.format("CEP %s is invalid: CEP must be numeric", cep));
-        }
-    }
-
-    private void validatePeso(Double peso) {
-        if (peso == null || peso <= 0) {
-            throw new InvalidParameterException("Peso must be a positive number");
-        }
-    }
 
 }

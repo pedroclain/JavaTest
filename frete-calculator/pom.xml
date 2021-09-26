@@ -10,11 +10,15 @@
     </parent>
     <groupId>com.sigabem</groupId>
     <artifactId>frete-calculator</artifactId>
-    <version>0.0.1</version>
+    <version>1.0</version>
     <name>Calculadora de frete</name>
     <description>Api usada para calcular descontos em fretes dependendo da região</description>
     <properties>
         <java.version>11</java.version>
+        <swagger.version>3.0.0</swagger.version>
+        <mysql.version>8.0.26</mysql.version>
+        <lombok.version>1.18.20</lombok.version>
+        <h2.version>1.4.200</h2.version>
     </properties>
     <dependencies>
         <dependency>
@@ -36,21 +40,34 @@
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <scope>test</scope>
+            <version>${h2.version}</version>
         </dependency>
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
+            <version>${mysql.version}</version>
             <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <optional>true</optional>
+            <version>${lombok.version}</version>
         </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-boot-starter</artifactId>
+            <version>${swagger.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>io.springfox</groupId>
+            <artifactId>springfox-swagger-ui</artifactId>
+            <version>${swagger.version}</version>
         </dependency>
     </dependencies>
 

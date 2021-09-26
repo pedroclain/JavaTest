@@ -30,7 +30,7 @@ public class EntregaUtilTest {
     public static Entrega create75Percent() {
         Entrega entrega = create();
         entrega.setCepOrigem("22795810");
-        entrega.setCepDestino("2390010"); // Angra
+        entrega.setCepDestino("23900100"); // Angra
         entrega.setDataPrevistaEntrega(LocalDate.now().plusDays(3));
         entrega.setVlTotalFrete(5D);
         return entrega;

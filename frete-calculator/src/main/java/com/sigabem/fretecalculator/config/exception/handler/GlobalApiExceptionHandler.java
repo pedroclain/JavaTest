@@ -1,10 +1,11 @@
 package com.sigabem.fretecalculator.config.exception.handler;
 
+import com.sigabem.fretecalculator.config.exception.ApiExceptionDetails;
+import com.sigabem.fretecalculator.config.exception.InvalidParameterException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
@@ -16,25 +17,27 @@ import java.util.*;
 public class GlobalApiExceptionHandler {
 
     @ExceptionHandler(InvalidParameterException.class)
-    public ResponseEntity<?> InvalidCpfExceptionHandler(HttpServletRequest req, InvalidParameterException ex) {
-        log.error("InvalidParameterException{}\n", req.getRequestURI(), ex);
-        return new ResponseEntity<>(new ApiExceptionDetails<>(new Date().getTime(), 404,
-                "Invalid parameter", List.of(ex.getMsg())), HttpStatus.BAD_REQUEST);
+    public ResponseEntity<?> InvalidParameterExceptionHandler(HttpServletRequest req, InvalidParameterException ex) {
+        log.error("InvalidParameterException: {}. {}\n", req.getRequestURI(), ex.getMsg(), ex);
+        Map<String, String> errorDetails = new HashMap<>();
+        errorDetails.put("message", ex.getMsg());
+        errorDetails.put("field", ex.getField());
+        errorDetails.put("wrongValue", ex.getWrongValue());
+        ApiExceptionDetails<Object> exceptionDetails = ApiExceptionDetails.builder()
+                .timestamp(new Date().getTime())
+                .message("Campo invalido")
+                .status(HttpStatus.BAD_REQUEST.value())
+                .details(List.of(errorDetails))
+                .build();
+        return new ResponseEntity<>(exceptionDetails, HttpStatus.BAD_REQUEST);
 
-    }
-
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<?> HttpMessageNotReadableExceptionHandler(HttpServletRequest req, HttpMessageNotReadableException ex) {
-        log.error("HttpMessageNotReadableException{}\n", req.getRequestURI(), ex);
-        return new ResponseEntity<>(new ApiExceptionDetails<>(new Date().getTime(), 404,
-                "Invalid parameter", List.of(Optional.ofNullable(ex.getMessage()))), HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> ExceptionHandler(HttpServletRequest req, Exception ex) {
         log.error("Exception{}\n", req.getRequestURI(), ex);
-        return new ResponseEntity<>(new ApiExceptionDetails<>(new Date().getTime(), 404,
-                "Invalid parameter", List.of(ex.getMessage())), HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(new ApiExceptionDetails<>(new Date().getTime(), 500,
+                "Ocorreu uma exceção", List.of(ex.getMessage())), HttpStatus.INTERNAL_SERVER_ERROR);
 
     }
 }

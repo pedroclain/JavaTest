@@ -2,9 +2,7 @@ package com.sigabem.fretecalculator.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sigabem.fretecalculator.payload.EntregaRequest;
-import com.sigabem.fretecalculator.payload.EntregaResponse;
 import com.sigabem.fretecalculator.util.EntregaRequestUtilTest;
-import com.sigabem.fretecalculator.util.EntregaResponseUtilTest;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +14,8 @@ import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Transactional
@@ -25,13 +25,14 @@ public class EntregaControllerIT {
     MockMvc mockMvc;
     @Autowired
     ObjectMapper objectMapper;
+    String URL = "/sigabem/api/v1/entrega/calcula-frete";
 
     @Test
     @DisplayName("When successful return status code 201 and EntregaResponse object response")
-    void returnEntregaResponse_WhenSuccessful() throws Exception{
+    void whenSuccessful_ReturnEntregaResponse() throws Exception{
         String requestJson = objectMapper.writeValueAsString(EntregaRequestUtilTest.create50Percent());
 
-        mockMvc.perform(MockMvcRequestBuilders.post("/sigabem/calcula-frete")
+        mockMvc.perform(MockMvcRequestBuilders.post(URL)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(requestJson))
                 .andExpect(MockMvcResultMatchers.status().isCreated());
@@ -39,44 +40,65 @@ public class EntregaControllerIT {
 
     @Test
     @DisplayName("When CEP is a no numeric type throw InvalidParameterException, return custom error response and 404 status code")
-    void throwInvalidParameterException_WhenCepIsInvalid() throws Exception{
+    void whenCepIsInvalid_ReturnInvalidParameterException() throws Exception{
         EntregaRequest entregaRequest = EntregaRequestUtilTest.create50Percent();
         entregaRequest.setCepOrigem("1234567a");
         String jsonRequest = objectMapper.writeValueAsString(entregaRequest);
-        mockMvc.perform(MockMvcRequestBuilders.post("/sigabem/calcula-frete")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(jsonRequest))
-                .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.msg")
-                        .value("Invalid parameter"))
-                .andExpect(MockMvcResultMatchers.jsonPath("$.details")
-                        .value(String.format("CEP %s is invalid: CEP must be numeric", entregaRequest.getCepOrigem())));
+        HashMap<String, String> details = new HashMap<>();
+        details.put("message", "CEP deve ser numerico no formato 'xxxxxxxx'");
+        details.put("field", "cepOrigem");
+        details.put("wrongValue", entregaRequest.getCepOrigem());
 
-        entregaRequest.setCepOrigem("123");
-        jsonRequest = objectMapper.writeValueAsString(entregaRequest);
-        mockMvc.perform(MockMvcRequestBuilders.post("/sigabem/calcula-frete")
+        mockMvc.perform(MockMvcRequestBuilders.post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.msg")
-                        .value("Invalid parameter"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
+                        .value("Campo invalido"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.details")
-                        .value(String.format("CEP %s is invalid: CEP must be numeric", entregaRequest.getCepOrigem())));
+                        .value(details));
     }
 
     @Test
-    @DisplayName("When peso is empty or no positive number throw InvalidParameterException, return custom error response and 404 status code")
-    void throwInvalidParameterException_WhenPesoIsInvalid() throws Exception {
+    @DisplayName("When CEP is a no numeric type throw InvalidParameterException, return custom error response and 404 status code")
+    void whenCepIsNotFound_ReturnInvalidParameterException() throws Exception{
         EntregaRequest entregaRequest = EntregaRequestUtilTest.create50Percent();
-        entregaRequest.setPeso(-1D);
+        entregaRequest.setCepOrigem("23900100");
         String jsonRequest = objectMapper.writeValueAsString(entregaRequest);
-        mockMvc.perform(MockMvcRequestBuilders.post("/sigabem/calcula-frete")
+        HashMap<String, String> details = new HashMap<>();
+        details.put("message", "CEP not found");
+        details.put("field", "cepOrigem");
+        details.put("wrongValue", entregaRequest.getCepOrigem());
+
+        mockMvc.perform(MockMvcRequestBuilders.post(URL)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(jsonRequest))
                 .andExpect(MockMvcResultMatchers.status().isBadRequest())
-                .andExpect(MockMvcResultMatchers.jsonPath("$.msg")
-                        .value("Invalid parameter"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
+                        .value("Campo invalido"))
                 .andExpect(MockMvcResultMatchers.jsonPath("$.details")
-                        .value("Peso must be a positive number"));
+                        .value(details));
+    }
+
+    @Test
+    @DisplayName("When CEP is not found in ViaCep API throw InvalidParameterException, return custom error response and 404 status code")
+    void throwInvalidParameterException_WhenPesoIsInvalid() throws Exception {
+        EntregaRequest entregaRequest = EntregaRequestUtilTest.create50Percent();
+        entregaRequest.setPeso("-1");
+        String jsonRequest = objectMapper.writeValueAsString(entregaRequest);
+
+        HashMap<String, String> details = new HashMap<>();
+        details.put("message", "Peso deve ser um valor positivo no formato 'dd.ff'");
+        details.put("field", "peso");
+        details.put("wrongValue", entregaRequest.getPeso());
+
+        mockMvc.perform(MockMvcRequestBuilders.post(URL)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(jsonRequest))
+                .andExpect(MockMvcResultMatchers.status().isBadRequest())
+                .andExpect(MockMvcResultMatchers.jsonPath("$.message")
+                        .value("Campo invalido"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$.details")
+                        .value(details));
     }
 }

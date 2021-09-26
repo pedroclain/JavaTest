@@ -1,5 +1,6 @@
-package com.sigabem.fretecalculator.controller;
+package com.sigabem.fretecalculator.api.controller;
 
+import com.sigabem.fretecalculator.api.v1.EntregaController;
 import com.sigabem.fretecalculator.model.Entrega;
 import com.sigabem.fretecalculator.payload.EntregaRequest;
 import com.sigabem.fretecalculator.payload.EntregaResponse;
@@ -36,9 +37,8 @@ public class EntregaControllerTest {
 
     @Test
     @DisplayName("When successful return status code 201 and EntregaResponse object response")
-    void returnEntregaResponse_WhenSuccessful() {
+    void WhenSuccessful_ReturnEntregaResponseObject() {
         ResponseEntity<?> responseEntity = controller.postEntrega(EntregaRequestUtilTest.create50Percent());
-
         EntregaResponse entregaResponse = EntregaResponseUtilTest.create50Percent();
         Assertions.assertEquals(entregaResponse,responseEntity.getBody());
         Assertions.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
