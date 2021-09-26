@@ -26,7 +26,6 @@ public class EntregaController {
     @ApiOperation(value = "Calcula o frete e a data prevista para entrega", response = EntregaResponse.class, code = 201)
     @ApiResponses(value = {
             @ApiResponse(code = 201, message = "Adiciona uma nova Entrega no banco de dados"),
-            @ApiResponse(code = 500, message = "Foi gerada uma exceção"),
             @ApiResponse(code = 400, message = "Campo invalido", response = ApiExceptionDetails.class)
     })
     @PostMapping(value = "/calcula-frete", produces = MediaType.APPLICATION_JSON_VALUE, consumes = MediaType.APPLICATION_JSON_VALUE)
