@@ -21,8 +21,7 @@ Teste de seleção para vaga de Java
 
 ### Utilizando docker
 
-1. Caso tenha o docker instalado basta digitar o comando na raiz do projeto para criar um container mysql
-
+1. Caso tenha o docker instalado basta digitar o comando abaixo na raiz do projeto para criar um container mysql. O banco de dados será criado automaticamente, caso não exista, no momento que a aplicação iniciar
     ```sh
     sudo docker-compose up
     ```
@@ -35,7 +34,7 @@ Teste de seleção para vaga de Java
 
 ### Instalação padrão
 
-1. Caso já o mysql rodando no computador, basta apenas mudar as credenciais no arquivo application.yml
+1. Caso já tenha o mysql rodando no computador, basta mudar as credenciais no arquivo ```application.yml``` para suas credenciais. Lembrando que o banco será criado caso não exista
 
    ```yml
    user: root
@@ -50,6 +49,8 @@ Teste de seleção para vaga de Java
   
 ### Acessando a aplicação
 
-Acesse a url ```localhost:8080/sigabem/api/v1/frete-calculator```
+1. Acesse a url ```localhost:8080/sigabem/api/v1/entrega/frete-calculator```
+
+2. Acesse a documentação em ```localhost:8080/swagger-ui/```
 
 
