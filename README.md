@@ -49,7 +49,7 @@ Teste de seleção para vaga de Java
   
 ### Acessando a aplicação
 
-1. Acesse a url ```localhost:8080/sigabem/api/v1/entrega/frete-calculator```
+1. Acesse a url ```localhost:8080/sigabem/api/v1/entrega/calcula-frete```
 
 2. Acesse a documentação em ```localhost:8080/swagger-ui/```
 
